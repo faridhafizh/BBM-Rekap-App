@@ -1,29 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Elements
   const monthSelect = document.getElementById("monthSelect");
-
   const mainFormCard = document.getElementById("mainFormCard");
   const generateCard = document.getElementById("generateCard");
-
   const inputId = document.getElementById("inputId");
   const btnSearch = document.getElementById("btnSearch");
   const menuType = document.getElementById("menuType");
-
   const inputSection = document.getElementById("inputSection");
   const unconditionalSection = document.getElementById("unconditionalSection");
-
   const tanggalRev = document.getElementById("tanggalRev");
   const kmRev = document.getElementById("kmRev");
   const hargaRev = document.getElementById("hargaRev");
+  const keteranganInput = document.getElementById("keteranganInput");
   const statusApprov = document.getElementById("statusApprov");
-
   const btnSave = document.getElementById("btnSave");
   const saveMessage = document.getElementById("saveMessage");
-
   const btnGenerate = document.getElementById("btnGenerate");
   const resultText = document.getElementById("resultText");
   const btnCopy = document.getElementById("btnCopy");
-
   const loader = document.getElementById("loader");
 
   const API_URL = APP_CONFIG.apiUrl;
@@ -71,7 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
   menuType.addEventListener("change", () => {
     inputSection.style.display = "none";
     unconditionalSection.style.display = "none";
-
     if (menuType.value === "input") {
       inputSection.style.display = "block";
     } else if (menuType.value === "unconditional") {
@@ -108,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tanggalRev.value = d.tanggal || "";
           kmRev.value = d.km || "";
           hargaRev.value = d.harga || "";
+          keteranganInput.value = d.keterangan || "";
         } else if (d.tipe === "unconditional") {
           statusApprov.value = d.status || "";
         }
@@ -157,13 +150,15 @@ document.addEventListener("DOMContentLoaded", () => {
       tanggal: "",
       km: "",
       harga: "",
+      keterangan: "",
       status: "",
     };
 
     if (type === "input") {
-      payload.tanggal = tanggalRev.value.trim();
-      payload.km = kmRev.value.trim();
-      payload.harga = hargaRev.value.trim();
+      payload.tanggal    = tanggalRev.value.trim();
+      payload.km         = kmRev.value.trim();
+      payload.harga      = hargaRev.value.trim();
+      payload.keterangan = keteranganInput.value.trim();
     } else if (type === "unconditional") {
       payload.status = statusApprov.value;
       if (!payload.status) {
@@ -176,9 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload),
       });
       const result = await response.json();
@@ -219,14 +212,15 @@ document.addEventListener("DOMContentLoaded", () => {
           if (r.tipe === "input") {
             let updates = [];
             if (r.tanggal) updates.push(`tanggal ${r.tanggal}`);
-            if (r.km) updates.push(`KM menjadi ${r.km}`);
-            if (r.harga) updates.push(`harga menjadi ${r.harga}`);
-
+            if (r.km)      updates.push(`KM menjadi ${r.km}`);
+            if (r.harga)   updates.push(`harga menjadi ${r.harga}`);
+            // keterangan sengaja tidak di-generate
             if (updates.length > 0) {
               generatedMessage += `${r.id} >> ${updates.join(", ")}\n`;
             }
           } else if (r.tipe === "unconditional") {
-            if (r.status && r.status !== "unverified") {
+            // status selalu di-generate (tidak ada unverified lagi)
+            if (r.status) {
               generatedMessage += `${r.id} >> ${r.status}\n`;
             }
           }
@@ -254,29 +248,23 @@ document.addEventListener("DOMContentLoaded", () => {
     resultText.select();
     resultText.setSelectionRange(0, 99999);
     document.execCommand("copy");
-
     const originalText = btnCopy.textContent;
     btnCopy.textContent = "Berhasil di-copy!";
-    setTimeout(() => {
-      btnCopy.textContent = originalText;
-    }, 2000);
+    setTimeout(() => { btnCopy.textContent = originalText; }, 2000);
   });
 
   // Helper functions
-  function showLoader() {
-    loader.style.display = "flex";
-  }
-  function hideLoader() {
-    loader.style.display = "none";
-  }
+  function showLoader() { loader.style.display = "flex"; }
+  function hideLoader() { loader.style.display = "none"; }
 
   function resetFormFields() {
     tanggalRev.value = "";
     kmRev.value = "";
     hargaRev.value = "";
+    keteranganInput.value = "";
     statusApprov.value = "";
   }
-                                                                                                                                                                                                           
+
   function resetForm() {
     inputId.value = "";
     menuType.value = "";
@@ -284,8 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
     unconditionalSection.style.display = "none";
     resetFormFields();
     btnSave.disabled = true;
-    setTimeout(() => {    showMessage("", false);
-    }, 3000);
+    setTimeout(() => { showMessage("", false); }, 3000);
   }
 
   function showMessage(msg, isSuccess, isError = false) {
