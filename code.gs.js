@@ -1,6 +1,6 @@
 // ini hanya dokumentasi dari code.gs di appscript, agar bisa di simpan di repositori github.
 
-// Kolom sheet Anda: [ID, Tanggal, KM, Harga, Keterangan, Timestamp]
+// Kolom sheet: [ID, Tanggal, KM, Harga, Keterangan, Timestamp]
 // Index:            [ 0,       1,  2,     3,          4,         5]
 
 function getSheets() {
@@ -65,7 +65,7 @@ function doPost(e) {
     if (!sheet) throw new Error("Sheet tidak ditemukan: " + data.sheetName);
 
     var id       = String(data.id).trim();
-    var tipe     = data.tipe || "";
+    var tipe     = data.tipe     || "";
     var tanggal  = data.tanggal  || "";
     var km       = data.km       || "";
     var harga    = data.harga    || "";

@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hargaRev.value = "";
     statusApprov.value = "";
   }
-
+                                                                                                                                                                                                           
   function resetForm() {
     inputId.value = "";
     menuType.value = "";
@@ -284,8 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
     unconditionalSection.style.display = "none";
     resetFormFields();
     btnSave.disabled = true;
-    setTimeout(() => {
-      showMessage("", false);
+    setTimeout(() => {    showMessage("", false);
     }, 3000);
   }
 

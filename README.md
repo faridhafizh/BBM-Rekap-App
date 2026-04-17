@@ -20,7 +20,6 @@ Berikut adalah informasi teknis dan *business logic* dari aplikasi ini:
     * Aturan format "Menu Input": `ID >> [kolom yang diubah] menjadi [nilai]`. (Contoh: `id1 >> tanggal 10 maret 2026, KM menjadi 34550`). Data kosong/sesuai (*Data OK*) diabaikan.
     * Aturan format "Menu Unconditional": `ID >> [Status Saat Ini]`. Data dengan status "unverified" direkam ke *sheet* untuk dokumentasi, namun sengaja **tidak** di-*generate* ke dalam pesan laporan (di-*skip*).
 
-
 ## Cara Pemasangan (Setup)
 
 ### 1. Persiapan Google Spreadsheet
