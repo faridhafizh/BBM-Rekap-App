@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap BBM Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Rekap Data BBM Connect</h1>
+        <div class="card">
+            <div class="form-group">
+                <label for="apiUrl">API URL (Google Apps Script):</label>
+                <input type="text" id="apiUrl" placeholder="Masukkan Web App URL Apps Script Anda di sini">
+                <button id="btnLoadSheets">Muat Bulan (Sheet)</button>
+            </div>
+            <div class="form-group">
+                <label for="monthSelect">Pilih Bulan (Sheet):</label>
+                <select id="monthSelect">
+                    <option value="">-- Muat Sheet Terlebih Dahulu --</option>
+                </select>
+            </div>
+        </div>
+        <div class="card" id="mainFormCard" style="display: none;">
+            <h2>Form Input Rekap</h2>
+            <div class="form-group inline-group">
+                <div class="input-with-button">
+                    <label for="inputId">ID Data:</label>
+                    <input type="text" id="inputId" placeholder="Masukkan ID dari sheet">
+                </div>
+                <button id="btnSearch" class="btn-search">Cari ID</button>
+            </div>
+            <div class="form-group">
+                <label for="menuType">Tipe Pengecekan:</label>
+                <select id="menuType">
+                    <option value="">-- Pilih Tipe Pengecekan --</option>
+                    <option value="input">Menu Input (Cek Struk)</option>
+                    <option value="unconditional">Menu Unconditional (Cek Approval)</option>
+                </select>
+            </div>
+            <!-- Fields for Menu Input -->
+            <div id="inputSection" class="section" style="display: none;">
+                <p class="help-text">Hanya isi jika ada ketidaksesuaian dengan struk. Biarkan kosong jika sesuai.</p>
+                <div class="form-group">
+                    <label for="tanggalRev">Tanggal Benar (di struk):</label>
+                    <input type="text" id="tanggalRev" placeholder="Contoh: 10 Maret 2026">
+                </div>
+                <div class="form-group">
+                    <label for="kmRev">KM Benar:</label>
+                    <input type="text" id="kmRev" placeholder="Contoh: 34550">
+                </div>
+                <div class="form-group">
+                    <label for="hargaRev">Harga Benar:</label>
+                    <input type="text" id="hargaRev" placeholder="Contoh: 65000">
+                </div>
+            </div>
+            <!-- Fields for Menu Unconditional -->
+            <div id="unconditionalSection" class="section" style="display: none;">
+                <div class="form-group">
+                    <label for="statusApprov">Status Saat Ini:</label>
+                    <select id="statusApprov">
+                        <option value="">-- Pilih Status --</option>
+                        <option value="Butuh approved 2">Baru Approved 1 (Butuh approved 2)</option>
+                        <option value="Butuh approved 3">Baru Approved 2 (Butuh approved 3)</option>
+                        <option value="Butuh di input">Sudah disetujui GM (Butuh di input)</option>
+                        <option value="unverified">Unverified</option>
+                    </select>
+                </div>
+            </div>
+            <button id="btnSave" class="btn-primary">Simpan Rekap</button>
+            <div id="saveMessage" class="message"></div>
+        </div>
+        <div class="card" id="generateCard" style="display: none;">
+            <h2>Generate Pesan Laporan</h2>
+            <button id="btnGenerate" class="btn-secondary">Generate Pesan Rekap Bulan Ini</button>
+            <div class="form-group">
+                <textarea id="resultText" rows="10" readonly placeholder="Hasil rekap akan muncul di sini..."></textarea>
+            </div>
+            <button id="btnCopy" class="btn-secondary" style="display:none;">Copy ke Clipboard</button>
+        </div>
+    </div>
+    <div id="loader" class="loader-overlay" style="display:none;">
+        <div class="spinner"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
