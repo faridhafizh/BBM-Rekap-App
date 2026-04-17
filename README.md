@@ -2,6 +2,25 @@
 
 Aplikasi sederhana untuk magang dalam melakukan rekapitulasi data BBM Connect secara manual dan men-generate laporan.
 
+## Penjelasan Aplikasi (Untuk Asisten AI Baru)
+Aplikasi ini dibangun untuk mengotomatisasi pembuatan laporan dari proses verifikasi manual data "BBM Connect". 
+Berikut adalah informasi teknis dan *business logic* dari aplikasi ini:
+
+* **Arsitektur:**
+  * **Frontend:** Murni HTML, CSS (Vanilla), dan JavaScript. Dirancang ringan agar bisa di-*deploy* secara statis (misal via Vercel atau dijalankan lokal).
+  * **Backend:** Google Apps Script (GAS) yang di-*deploy* sebagai "Web App". Bertugas menerima *HTTP GET/POST requests* dari frontend dan melakukan operasi CRUD ke Google Spreadsheet.
+  * **Database:** Google Spreadsheet. Tiap *sheet* (lembar kerja) merepresentasikan bulan rekap data (contoh: "Maret 2026").
+* **Business Logic (Aturan Rekap):**
+  * Terdapat dua tipe pengecekan (*Menu Type*):
+    1. **Menu Input (Cek Struk):** Membandingkan data di aplikasi dengan foto struk. Jika ada perbedaan, *user* menginputkan nilai yang benar (Tanggal, KM, Harga). Jika data sudah benar semua (*Data OK*), *user* dapat men-skip atau mengosongkan nilai form input.
+    2. **Menu Unconditional (Cek Approval):** Mengecek status persetujuan (*approval*). Status yang umum: "Butuh approved 2", "Butuh approved 3", "Butuh di input", dan "unverified".
+  * **Pencarian Data (Search ID):** Mencegah duplikasi data. Sebelum menginput rekap baru, aplikasi memanggil data lama berdasarkan ID. Jika ditemukan, data diisikan ke form (edit mode).
+  * **Generate Laporan (Report Generation):** 
+    * Format pesan admin di-*generate* berdasarkan data di *sheet* bersangkutan.
+    * Aturan format "Menu Input": `ID >> [kolom yang diubah] menjadi [nilai]`. (Contoh: `id1 >> tanggal 10 maret 2026, KM menjadi 34550`). Data kosong/sesuai (*Data OK*) diabaikan.
+    * Aturan format "Menu Unconditional": `ID >> [Status Saat Ini]`. Data dengan status "unverified" direkam ke *sheet* untuk dokumentasi, namun sengaja **tidak** di-*generate* ke dalam pesan laporan (di-*skip*).
+
+
 ## Cara Pemasangan (Setup)
 
 ### 1. Persiapan Google Spreadsheet
