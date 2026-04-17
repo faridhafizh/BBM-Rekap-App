@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Elements
-  const apiUrlInput = document.getElementById("apiUrl");
-  const btnLoadSheets = document.getElementById("btnLoadSheets");
   const monthSelect = document.getElementById("monthSelect");
 
   const mainFormCard = document.getElementById("mainFormCard");
@@ -14,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputSection = document.getElementById("inputSection");
   const unconditionalSection = document.getElementById("unconditionalSection");
 
-  // Input Fields
   const tanggalRev = document.getElementById("tanggalRev");
   const kmRev = document.getElementById("kmRev");
   const hargaRev = document.getElementById("hargaRev");
@@ -29,26 +26,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const loader = document.getElementById("loader");
 
-  // Local Storage for API URL
-  const savedApiUrl = localStorage.getItem("bbm_api_url");
-  if (savedApiUrl) {
-    apiUrlInput.value = savedApiUrl;
-  }
+  const API_URL = APP_CONFIG.apiUrl;
 
-  // Load Sheets
-  btnLoadSheets.addEventListener("click", async () => {
-    const url = apiUrlInput.value.trim();
-    if (!url) {
-      alert("Masukkan API URL terlebih dahulu!");
-      return;
-    }
-    localStorage.setItem("bbm_api_url", url);
-
+  // Auto-load sheets saat halaman siap
+  async function loadSheets() {
     showLoader();
     try {
-      const response = await fetch(`${url}?action=getSheets`);
+      const response = await fetch(`${API_URL}?action=getSheets`);
       const data = await response.json();
-
       if (data.status === "success") {
         monthSelect.innerHTML = '<option value="">-- Pilih Bulan --</option>';
         data.data.forEach((sheet) => {
@@ -61,14 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Gagal memuat sheet: " + data.message);
       }
     } catch (error) {
-      alert(
-        "Terjadi kesalahan koneksi. Pastikan URL benar dan CORS diizinkan di Apps Script.",
-      );
+      alert("Gagal terhubung ke API. Periksa config.js.");
       console.error(error);
     } finally {
       hideLoader();
     }
-  });
+  }
+
+  loadSheets();
 
   // Handle Month Selection
   monthSelect.addEventListener("change", () => {
@@ -96,7 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Search ID
   btnSearch.addEventListener("click", async () => {
-    const url = apiUrlInput.value.trim();
     const sheet = monthSelect.value;
     const id = inputId.value.trim();
 
@@ -107,11 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showLoader();
     showMessage("", false);
-    btnSave.disabled = true; // Kunci dulu selama proses pencarian
+    btnSave.disabled = true;
 
     try {
       const response = await fetch(
-        `${url}?action=search&sheetName=${encodeURIComponent(sheet)}&id=${encodeURIComponent(id)}`,
+        `${API_URL}?action=search&sheetName=${encodeURIComponent(sheet)}&id=${encodeURIComponent(id)}`
       );
       const result = await response.json();
 
@@ -128,27 +112,26 @@ document.addEventListener("DOMContentLoaded", () => {
           statusApprov.value = d.status || "";
         }
 
-        btnSave.disabled = false; // ✅ Buka kunci — ID ditemukan
+        btnSave.disabled = false;
         showMessage("✅ ID ditemukan! Silakan edit jika perlu.", true);
       } else {
-        // ID tidak ditemukan
         resetFormFields();
         menuType.value = "";
         menuType.dispatchEvent(new Event("change"));
-        btnSave.disabled = true; // 🔒 Tetap terkunci — ID tidak ada di sheet
+        btnSave.disabled = true;
         showMessage(
           "❌ ID tidak ditemukan di sheet. Pastikan ID sudah ada di spreadsheet.",
           false,
-          true,
+          true
         );
       }
     } catch (error) {
       console.error(error);
       btnSave.disabled = true;
       showMessage(
-        "❌ Gagal terhubung ke server. Periksa koneksi atau API URL.",
+        "❌ Gagal terhubung ke server. Periksa koneksi atau config.js.",
         false,
-        true,
+        true
       );
     } finally {
       hideLoader();
@@ -157,7 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Save Record
   btnSave.addEventListener("click", async () => {
-    const url = apiUrlInput.value.trim();
     const sheet = monthSelect.value;
     const id = inputId.value.trim();
     const type = menuType.value;
@@ -185,18 +167,14 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (type === "unconditional") {
       payload.status = statusApprov.value;
       if (!payload.status) {
-        showMessage(
-          "Pilih Status Saat Ini untuk menu unconditional!",
-          false,
-          true,
-        );
+        showMessage("Pilih Status Saat Ini untuk menu unconditional!", false, true);
         return;
       }
     }
 
     showLoader();
     try {
-      const response = await fetch(url, {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "text/plain;charset=utf-8",
@@ -221,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Generate Message
   btnGenerate.addEventListener("click", async () => {
-    const url = apiUrlInput.value.trim();
     const sheet = monthSelect.value;
 
     showLoader();
@@ -230,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        `${url}?action=getAll&sheetName=${encodeURIComponent(sheet)}`,
+        `${API_URL}?action=getAll&sheetName=${encodeURIComponent(sheet)}`
       );
       const result = await response.json();
 
@@ -256,8 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (generatedMessage.trim() === "") {
-          resultText.value =
-            "Tidak ada data yang perlu direkap untuk bulan ini.";
+          resultText.value = "Tidak ada data yang perlu direkap untuk bulan ini.";
         } else {
           resultText.value = generatedMessage.trim();
           btnCopy.style.display = "block";
@@ -307,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
     inputSection.style.display = "none";
     unconditionalSection.style.display = "none";
     resetFormFields();
-    btnSave.disabled = true; // ← tambahkan ini
+    btnSave.disabled = true;
     setTimeout(() => {
       showMessage("", false);
     }, 3000);
@@ -315,12 +291,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showMessage(msg, isSuccess, isError = false) {
     if (!msg) {
-        saveMessage.style.display = 'none';
-        saveMessage.className = 'message';
-        return;
+      saveMessage.style.display = "none";
+      saveMessage.className = "message";
+      return;
     }
-    saveMessage.style.display = ''; // ← hapus inline style agar CSS class bisa bekerja
+    saveMessage.style.display = "";
     saveMessage.textContent = msg;
-    saveMessage.className = 'message ' + (isError ? 'error' : (isSuccess ? 'success' : ''));
-}
+    saveMessage.className = "message " + (isError ? "error" : isSuccess ? "success" : "");
+  }
 });
