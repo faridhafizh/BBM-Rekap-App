@@ -1,55 +1,54 @@
 // ini hanya dokumentasi dari code.gs di appscript, agar bisa di simpan di repositori github.
 
+// Kolom sheet Anda: [ID, Tanggal, KM, Harga, Keterangan, Timestamp]
+// Index:            [ 0,       1,  2,     3,          4,         5]
+
 function getSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheets = ss.getSheets();
-  var names = [];
-  for (var i = 0; i < sheets.length; i++) {
-    names.push(sheets[i].getName());
-  }
-  return names;
+  return ss.getSheets().map(s => s.getName());
 }
 
 function searchRecord(sheetName, id) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(sheetName);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) throw new Error("Sheet tidak ditemukan");
-  
+
   var data = sheet.getDataRange().getValues();
-  // Assume Header: Timestamp, ID, Tipe, Status, Tanggal, KM, Harga
   for (var i = 1; i < data.length; i++) {
-    if (data[i][1] == id) {
+    if (String(data[i][0]).trim() == String(id).trim()) {
       return {
         row: i + 1,
-        timestamp: data[i][0],
-        id: data[i][1],
-        tipe: data[i][2],
-        status: data[i][3],
-        tanggal: data[i][4],
-        km: data[i][5],
-        harga: data[i][6]
+        id:        data[i][0],
+        tanggal:   data[i][1],
+        km:        data[i][2],
+        harga:     data[i][3],
+        status:    data[i][4],  // Keterangan = status approval
+        timestamp: data[i][5],
+        // tipe tidak ada di sheet, tebak dari isi status
+        tipe: (data[i][4] && ["Butuh approved 2","Butuh approved 3","Butuh di input","unverified"].includes(String(data[i][4]).trim()))
+              ? "unconditional" : "input"
       };
     }
   }
-  return null; // Not found
+  return null;
 }
 
 function getAllRecords(sheetName) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(sheetName);
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   if (!sheet) throw new Error("Sheet tidak ditemukan");
-  
+
   var data = sheet.getDataRange().getValues();
   var records = [];
   for (var i = 1; i < data.length; i++) {
+    var statusVal = String(data[i][4]).trim();
+    var tipe = (["Butuh approved 2","Butuh approved 3","Butuh di input","unverified"].includes(statusVal))
+               ? "unconditional" : "input";
     records.push({
-      timestamp: data[i][0],
-      id: data[i][1],
-      tipe: data[i][2],
-      status: data[i][3],
-      tanggal: data[i][4],
-      km: data[i][5],
-      harga: data[i][6]
+      id:      data[i][0],
+      tanggal: data[i][1],
+      km:      data[i][2],
+      harga:   data[i][3],
+      status:  statusVal,
+      tipe:    tipe
     });
   }
   return records;
@@ -57,80 +56,68 @@ function getAllRecords(sheetName) {
 
 function doPost(e) {
   try {
-    var data;
-    // Handle if content type is text/plain or application/json
-    if (e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
-    } else {
-      throw new Error("No data received");
+    var data = JSON.parse(e.postData.contents);
+    if (data.action !== "save") {
+      return respond({status:"error", message:"Unknown action"});
     }
-    
-    var action = data.action;
 
-    if (action === "save") {
-      var sheetName = data.sheetName;
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var sheet = ss.getSheetByName(sheetName);
-      
-      if (!sheet) {
-        sheet = ss.insertSheet(sheetName);
-        sheet.appendRow(["Timestamp", "ID", "Tipe Pengecekan", "Keterangan/Status", "Tanggal Revisi", "KM Revisi", "Harga Revisi"]);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(data.sheetName);
+    if (!sheet) throw new Error("Sheet tidak ditemukan: " + data.sheetName);
+
+    var id       = String(data.id).trim();
+    var tipe     = data.tipe || "";
+    var tanggal  = data.tanggal  || "";
+    var km       = data.km       || "";
+    var harga    = data.harga    || "";
+    var status   = data.status   || "";
+    var timestamp = new Date();
+
+    // Cari baris berdasarkan ID (kolom A = index 0)
+    var dataRange = sheet.getDataRange().getValues();
+    var foundRow = -1;
+    for (var i = 1; i < dataRange.length; i++) {
+      if (String(dataRange[i][0]).trim() == id) {
+        foundRow = i + 1; // row number (1-based)
+        break;
       }
-
-      var id = data.id;
-      var tipe = data.tipe || "";
-      var status = data.status || "";
-      var tanggal = data.tanggal || "";
-      var km = data.km || "";
-      var harga = data.harga || "";
-      var timestamp = new Date();
-
-      var dataRange = sheet.getDataRange().getValues();
-      var foundRow = -1;
-      for (var i = 1; i < dataRange.length; i++) {
-        if (dataRange[i][1] == id) {
-          foundRow = i + 1;
-          break;
-        }
-      }
-
-      if (foundRow !== -1) {
-        // Update
-        sheet.getRange(foundRow, 1, 1, 7).setValues([[timestamp, id, tipe, status, tanggal, km, harga]]);
-      } else {
-        // Check if header exists
-        if (dataRange.length === 1 && dataRange[0].length === 1 && dataRange[0][0] === "") {
-          sheet.getRange(1, 1, 1, 7).setValues([["Timestamp", "ID", "Tipe Pengecekan", "Keterangan/Status", "Tanggal Revisi", "KM Revisi", "Harga Revisi"]]);
-        } else if (dataRange.length === 0 || dataRange[0][0] !== "Timestamp") {
-            if (dataRange.length === 0) {
-              sheet.appendRow(["Timestamp", "ID", "Tipe Pengecekan", "Keterangan/Status", "Tanggal Revisi", "KM Revisi", "Harga Revisi"]);
-            }
-        }
-        sheet.appendRow([timestamp, id, tipe, status, tanggal, km, harga]);
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "Data berhasil disimpan!"})).setMimeType(ContentService.MimeType.JSON);
-    } else {
-        return ContentService.createTextOutput(JSON.stringify({status: "error", message: "Unknown POST action"})).setMimeType(ContentService.MimeType.JSON);
     }
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: error.message})).setMimeType(ContentService.MimeType.JSON);
+
+    if (foundRow !== -1) {
+      // === UPDATE baris yang sudah ada ===
+      // Hanya tulis kolom yang relevan, jangan overwrite kolom lain
+      if (tipe === "input") {
+        if (tanggal) sheet.getRange(foundRow, 2).setValue(tanggal); // Kolom B
+        if (km)      sheet.getRange(foundRow, 3).setValue(km);      // Kolom C
+        if (harga)   sheet.getRange(foundRow, 4).setValue(harga);   // Kolom D
+      } else if (tipe === "unconditional") {
+        sheet.getRange(foundRow, 5).setValue(status); // Kolom E (Keterangan)
+      }
+      sheet.getRange(foundRow, 6).setValue(timestamp); // Kolom F (Timestamp)
+    } else {
+      // ID tidak ada di sheet → tolak, jangan buat baris baru
+      return respond({status:"error", message:"ID '" + id + "' tidak ditemukan di sheet. Pastikan ID sudah ada di spreadsheet terlebih dahulu."});
+    }
+
+    return respond({status:"success", message:"Data berhasil diperbarui!"});
+
+  } catch(err) {
+    return respond({status:"error", message: err.message});
   }
 }
 
 function doGet(e) {
   try {
     var action = e.parameter.action;
-    if (action === "getSheets") {
-      return ContentService.createTextOutput(JSON.stringify({status: "success", data: getSheets()})).setMimeType(ContentService.MimeType.JSON);
-    } else if (action === "search") {
-      return ContentService.createTextOutput(JSON.stringify({status: "success", data: searchRecord(e.parameter.sheetName, e.parameter.id)})).setMimeType(ContentService.MimeType.JSON);
-    } else if (action === "getAll") {
-      return ContentService.createTextOutput(JSON.stringify({status: "success", data: getAllRecords(e.parameter.sheetName)})).setMimeType(ContentService.MimeType.JSON);
-    } else {
-      return ContentService.createTextOutput(JSON.stringify({status: "success", message: "BBM Connect Rekap API is running."})).setMimeType(ContentService.MimeType.JSON);
-    }
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: error.message})).setMimeType(ContentService.MimeType.JSON);
+    if (action === "getSheets") return respond({status:"success", data: getSheets()});
+    if (action === "search")    return respond({status:"success", data: searchRecord(e.parameter.sheetName, e.parameter.id)});
+    if (action === "getAll")    return respond({status:"success", data: getAllRecords(e.parameter.sheetName)});
+    return respond({status:"success", message:"API is running."});
+  } catch(err) {
+    return respond({status:"error", message: err.message});
   }
+}
+
+function respond(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
