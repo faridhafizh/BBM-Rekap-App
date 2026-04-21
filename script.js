@@ -90,6 +90,32 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace("{status}", data.status || "");
   }
 
+  // format tanggal dari Google Sheets (ISO) ke format text
+  function formatTanggal(val) {
+    if (!val) return "";
+    // Deteksi format ISO dari Google Sheets (misal: 2025-09-03T16:00:00.000Z)
+    const d = new Date(val);
+    if (!isNaN(d.getTime()) && String(val).includes("T")) {
+      const bulan = [
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember",
+      ];
+      return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    // Kalau sudah string biasa, kembalikan apa adanya
+    return String(val).trim();
+  }
+
   // Auto-load sheets
   async function loadSheets() {
     showLoader();
@@ -287,9 +313,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         records.forEach((r) => {
           if (r.tipe === "input") {
-            const hasChanges = r.tanggal || r.km || r.harga;
-            if (hasChanges) {
-              generatedMessage += applyTemplate(tmplInput, r) + "\n";
+            // Build dinamis — hanya sertakan field yang benar-benar ada isinya
+            const tanggal = formatTanggal(r.tanggal);
+            const km = r.km ? String(r.km).trim() : "";
+            const harga = r.harga ? String(r.harga).trim() : "";
+
+            const parts = [];
+            if (tanggal) parts.push(`tanggal ${tanggal}`);
+            if (km) parts.push(`KM menjadi ${km}`);
+            if (harga) parts.push(`harga menjadi ${harga}`);
+
+            if (parts.length > 0) {
+              generatedMessage += `${r.id} » ${parts.join(", ")}\n`;
             }
           } else if (r.tipe === "unconditional") {
             if (r.status) {
