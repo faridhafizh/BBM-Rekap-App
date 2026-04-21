@@ -95,6 +95,44 @@
       </div>
       <div class="card" id="generateCard" style="display: none">
         <h2>Generate Pesan Laporan</h2>
+
+        <!-- Template Editor -->
+        <div class="template-toggle">
+          <button id="btnToggleTemplate" class="btn-template-toggle">
+            ⚙️ Edit Template Pesan
+          </button>
+        </div>
+        <div id="templateSection" class="section" style="display: none">
+          <p class="help-text">
+            Gunakan placeholder berikut:<br />
+            <code>{id}</code> · <code>{tanggal}</code> · <code>{km}</code> ·
+            <code>{harga}</code> · <code>{status}</code>
+          </p>
+          <div class="form-group">
+            <label for="templateInput">Template Menu Input:</label>
+            <input type="text" id="templateInput" />
+          </div>
+          <div class="form-group">
+            <label for="templateUnconditional"
+              >Template Menu Unconditional:</label
+            >
+            <input type="text" id="templateUnconditional" />
+          </div>
+          <div class="template-actions">
+            <button
+              id="btnSaveTemplate"
+              class="btn-primary"
+              style="width: auto; margin-top: 0"
+            >
+              Simpan Template
+            </button>
+            <button id="btnResetTemplate" class="btn-reset">
+              Reset ke Default
+            </button>
+          </div>
+          <div id="templateMessage" class="message"></div>
+        </div>
+
         <button id="btnGenerate" class="btn-secondary">
           Generate Pesan Rekap Bulan Ini
         </button>

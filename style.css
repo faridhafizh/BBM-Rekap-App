@@ -193,3 +193,54 @@ button:disabled {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.template-toggle {
+    margin-bottom: 12px;
+}
+
+.btn-template-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+.btn-template-toggle:hover {
+    background-color: #f0f0f0;
+}
+
+.template-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.btn-reset {
+    background-color: #fff;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.btn-reset:hover {
+    background-color: #f8d7da;
+}
+
+code {
+    background-color: #eee;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    font-family: monospace;
+}
