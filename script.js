@@ -330,23 +330,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showMessage(msg, isSuccess, isError = false) {
-    if (!msg) {
-      saveMessage.style.display = "none";
-      saveMessage.className = "message";
-      return;
-    }
-    saveMessage.style.display = "";
-    saveMessage.textContent = msg;
-    saveMessage.className = "message " + (isError ? "error" : isSuccess ? "success" : "");
+  if (!msg) {
+    saveMessage.style.display = "none";
+    saveMessage.className = "app-message";
+    return;
   }
+  saveMessage.style.display = "flex"; // flex agar icon & teks sejajar
+  saveMessage.textContent = msg;
+  saveMessage.className = "app-message " + (isError ? "error" : isSuccess ? "success" : "");
+}
 
-  function showTemplateMessage(msg, isSuccess) {
-    templateMessage.style.display = "";
-    templateMessage.textContent = msg;
-    templateMessage.className = "message " + (isSuccess ? "success" : "error");
-    setTimeout(() => {
-      templateMessage.style.display = "none";
-      templateMessage.className = "message";
-    }, 3000);
-  }
+function showTemplateMessage(msg, isSuccess) {
+  templateMessage.style.display = "flex";
+  templateMessage.textContent = msg;
+  templateMessage.className = "app-message " + (isSuccess ? "success" : "error");
+  setTimeout(() => {
+    templateMessage.style.display = "none";
+    templateMessage.className = "app-message";
+  }, 3000);
+}
+
 });
