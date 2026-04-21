@@ -17,13 +17,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnGenerate = document.getElementById("btnGenerate");
   const resultText = document.getElementById("resultText");
   const btnCopy = document.getElementById("btnCopy");
+  const resultWrapper = document.getElementById("resultWrapper");
   const loader = document.getElementById("loader");
 
   // Template elements
   const btnToggleTemplate = document.getElementById("btnToggleTemplate");
   const templateSection = document.getElementById("templateSection");
   const templateInput = document.getElementById("templateInput");
-  const templateUnconditional = document.getElementById("templateUnconditional");
+  const templateUnconditional = document.getElementById(
+    "templateUnconditional",
+  );
   const btnSaveTemplate = document.getElementById("btnSaveTemplate");
   const btnResetTemplate = document.getElementById("btnResetTemplate");
   const templateMessage = document.getElementById("templateMessage");
@@ -31,15 +34,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_URL = APP_CONFIG.apiUrl;
 
   // Default templates
-  const DEFAULT_TEMPLATE_INPUT = "{id} >> {tanggal}, KM menjadi {km}, harga menjadi {harga}";
+  const DEFAULT_TEMPLATE_INPUT =
+    "{id} >> {tanggal}, KM menjadi {km}, harga menjadi {harga}";
   const DEFAULT_TEMPLATE_UNCONDITIONAL = "{id} >> {status}";
   const STORAGE_KEY_INPUT = "bbm_template_input";
   const STORAGE_KEY_UNCONDITIONAL = "bbm_template_unconditional";
 
   // Load saved templates
   function loadTemplates() {
-    templateInput.value = localStorage.getItem(STORAGE_KEY_INPUT) || DEFAULT_TEMPLATE_INPUT;
-    templateUnconditional.value = localStorage.getItem(STORAGE_KEY_UNCONDITIONAL) || DEFAULT_TEMPLATE_UNCONDITIONAL;
+    templateInput.value =
+      localStorage.getItem(STORAGE_KEY_INPUT) || DEFAULT_TEMPLATE_INPUT;
+    templateUnconditional.value =
+      localStorage.getItem(STORAGE_KEY_UNCONDITIONAL) ||
+      DEFAULT_TEMPLATE_UNCONDITIONAL;
   }
 
   loadTemplates();
@@ -48,14 +55,20 @@ document.addEventListener("DOMContentLoaded", () => {
   btnToggleTemplate.addEventListener("click", () => {
     const isHidden = templateSection.style.display === "none";
     templateSection.style.display = isHidden ? "block" : "none";
-    btnToggleTemplate.textContent = isHidden ? "⚙️ Tutup Template Pesan" : "⚙️ Edit Template Pesan";
+    btnToggleTemplate.classList.toggle("open", isHidden);
   });
 
   // Save template
   btnSaveTemplate.addEventListener("click", () => {
-    localStorage.setItem(STORAGE_KEY_INPUT, templateInput.value.trim() || DEFAULT_TEMPLATE_INPUT);
-    localStorage.setItem(STORAGE_KEY_UNCONDITIONAL, templateUnconditional.value.trim() || DEFAULT_TEMPLATE_UNCONDITIONAL);
-    showTemplateMessage("✅ Template berhasil disimpan!", true);
+    localStorage.setItem(
+      STORAGE_KEY_INPUT,
+      templateInput.value.trim() || DEFAULT_TEMPLATE_INPUT,
+    );
+    localStorage.setItem(
+      STORAGE_KEY_UNCONDITIONAL,
+      templateUnconditional.value.trim() || DEFAULT_TEMPLATE_UNCONDITIONAL,
+    );
+    showTemplateMessage("Template berhasil disimpan!", true);
   });
 
   // Reset template
@@ -64,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
     templateUnconditional.value = DEFAULT_TEMPLATE_UNCONDITIONAL;
     localStorage.removeItem(STORAGE_KEY_INPUT);
     localStorage.removeItem(STORAGE_KEY_UNCONDITIONAL);
-    showTemplateMessage("↩️ Template direset ke default.", true);
+    showTemplateMessage("Template direset ke default.", true);
   });
 
   // Apply template with data
@@ -143,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        `${API_URL}?action=search&sheetName=${encodeURIComponent(sheet)}&id=${encodeURIComponent(id)}`
+        `${API_URL}?action=search&sheetName=${encodeURIComponent(sheet)}&id=${encodeURIComponent(id)}`,
       );
       const result = await response.json();
 
@@ -171,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showMessage(
           "❌ ID tidak ditemukan di sheet. Pastikan ID sudah ada di spreadsheet.",
           false,
-          true
+          true,
         );
       }
     } catch (error) {
@@ -180,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showMessage(
         "❌ Gagal terhubung ke server. Periksa koneksi atau config.js.",
         false,
-        true
+        true,
       );
     } finally {
       hideLoader();
@@ -211,14 +224,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (type === "input") {
-      payload.tanggal    = tanggalRev.value.trim();
-      payload.km         = kmRev.value.trim();
-      payload.harga      = hargaRev.value.trim();
+      payload.tanggal = tanggalRev.value.trim();
+      payload.km = kmRev.value.trim();
+      payload.harga = hargaRev.value.trim();
       payload.keterangan = keteranganInput.value.trim();
     } else if (type === "unconditional") {
       payload.status = statusApprov.value;
       if (!payload.status) {
-        showMessage("Pilih Status Saat Ini untuk menu unconditional!", false, true);
+        showMessage(
+          "Pilih Status Saat Ini untuk menu unconditional!",
+          false,
+          true,
+        );
         return;
       }
     }
@@ -250,15 +267,17 @@ document.addEventListener("DOMContentLoaded", () => {
   btnGenerate.addEventListener("click", async () => {
     const sheet = monthSelect.value;
     const tmplInput = templateInput.value.trim() || DEFAULT_TEMPLATE_INPUT;
-    const tmplUnconditional = templateUnconditional.value.trim() || DEFAULT_TEMPLATE_UNCONDITIONAL;
+    const tmplUnconditional =
+      templateUnconditional.value.trim() || DEFAULT_TEMPLATE_UNCONDITIONAL;
 
     showLoader();
     resultText.value = "";
     btnCopy.style.display = "none";
+    resultWrapper.style.display = "none"; // sembunyikan dulu
 
     try {
       const response = await fetch(
-        `${API_URL}?action=getAll&sheetName=${encodeURIComponent(sheet)}`
+        `${API_URL}?action=getAll&sheetName=${encodeURIComponent(sheet)}`,
       );
       const result = await response.json();
 
@@ -268,7 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         records.forEach((r) => {
           if (r.tipe === "input") {
-            // Cek apakah ada perubahan yang perlu dilaporkan
             const hasChanges = r.tanggal || r.km || r.harga;
             if (hasChanges) {
               generatedMessage += applyTemplate(tmplInput, r) + "\n";
@@ -280,8 +298,11 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
+        resultWrapper.style.display = "block"; // tampilkan wrapper dulu
         if (generatedMessage.trim() === "") {
-          resultText.value = "Tidak ada data yang perlu direkap untuk bulan ini.";
+          resultText.value =
+            "Tidak ada data yang perlu direkap untuk bulan ini.";
+          btnCopy.style.display = "none";
         } else {
           resultText.value = generatedMessage.trim();
           btnCopy.style.display = "block";
@@ -304,12 +325,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.execCommand("copy");
     const originalText = btnCopy.textContent;
     btnCopy.textContent = "Berhasil di-copy!";
-    setTimeout(() => { btnCopy.textContent = originalText; }, 2000);
+    setTimeout(() => {
+      btnCopy.textContent = originalText;
+    }, 2000);
   });
 
   // Helper functions
-  function showLoader() { loader.style.display = "flex"; }
-  function hideLoader() { loader.style.display = "none"; }
+  function showLoader() {
+    loader.style.display = "flex";
+  }
+  function hideLoader() {
+    loader.style.display = "none";
+  }
 
   function resetFormFields() {
     tanggalRev.value = "";
@@ -326,28 +353,31 @@ document.addEventListener("DOMContentLoaded", () => {
     unconditionalSection.style.display = "none";
     resetFormFields();
     btnSave.disabled = true;
-    setTimeout(() => { showMessage("", false); }, 3000);
+    setTimeout(() => {
+      showMessage("", false);
+    }, 3000);
   }
 
   function showMessage(msg, isSuccess, isError = false) {
-  if (!msg) {
-    saveMessage.style.display = "none";
-    saveMessage.className = "app-message";
-    return;
+    if (!msg) {
+      saveMessage.style.display = "none";
+      saveMessage.className = "app-message";
+      return;
+    }
+    saveMessage.style.display = "flex"; // flex agar icon & teks sejajar
+    saveMessage.textContent = msg;
+    saveMessage.className =
+      "app-message " + (isError ? "error" : isSuccess ? "success" : "");
   }
-  saveMessage.style.display = "flex"; // flex agar icon & teks sejajar
-  saveMessage.textContent = msg;
-  saveMessage.className = "app-message " + (isError ? "error" : isSuccess ? "success" : "");
-}
 
-function showTemplateMessage(msg, isSuccess) {
-  templateMessage.style.display = "flex";
-  templateMessage.textContent = msg;
-  templateMessage.className = "app-message " + (isSuccess ? "success" : "error");
-  setTimeout(() => {
-    templateMessage.style.display = "none";
-    templateMessage.className = "app-message";
-  }, 3000);
-}
-
+  function showTemplateMessage(msg, isSuccess) {
+    templateMessage.style.display = "flex";
+    templateMessage.textContent = msg;
+    templateMessage.className =
+      "app-message " + (isSuccess ? "success" : "error");
+    setTimeout(() => {
+      templateMessage.style.display = "none";
+      templateMessage.className = "app-message";
+    }, 3000);
+  }
 });
