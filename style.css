@@ -99,6 +99,55 @@ body {
   padding: 20px;
 }
 
+/* ===== TIPE PENGECEKAN HIGHLIGHT ===== */
+.menu-type-wrapper {
+  background: #e8effe;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.menu-type-wrapper .form-label {
+  color: var(--brand);
+  font-weight: 700;
+  font-size: .88rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.menu-type-wrapper .form-label::before {
+  font-size: .85rem;
+}
+
+.menu-type-wrapper .app-select {
+  border-color: var(--border);
+  background-color: #fff;
+  font-weight: 400;
+}
+
+.menu-type-wrapper .app-select:focus {
+  border-color: var(--brand);
+}
+
+/* Badge label tipe yang terpilih */
+.tipe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 6px;
+}
+
+.tipe-badge.input    { background: #dbeafe; color: #1e40af; }
+.tipe-badge.uncond   { background: #dcfce7; color: #166534; }
+.tipe-badge.noitem   { background: #fee2e2; color: #991b1b; }
+
 /* ===== INPUTS ===== */
 .app-select,
 .app-input {

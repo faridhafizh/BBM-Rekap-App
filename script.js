@@ -40,6 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const STORAGE_KEY_INPUT = "bbm_template_input";
   const STORAGE_KEY_UNCONDITIONAL = "bbm_template_unconditional";
 
+  const tipeBadge = document.getElementById("tipeBadge");
+
   // Load saved templates
   function loadTemplates() {
     templateInput.value =
@@ -156,13 +158,81 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Handle Menu Type change
-  menuType.addEventListener("change", () => {
+  menuType.addEventListener("change", async () => {
     inputSection.style.display = "none";
     unconditionalSection.style.display = "none";
-    if (menuType.value === "input") {
+    tipeBadge.style.display = "none";
+
+    const val = menuType.value;
+
+    if (val === "input") {
       inputSection.style.display = "block";
-    } else if (menuType.value === "unconditional") {
+      tipeBadge.style.display = "inline-flex";
+      tipeBadge.className = "tipe-badge input";
+      tipeBadge.textContent = "🧾 Menu Input";
+    } else if (val === "unconditional") {
       unconditionalSection.style.display = "block";
+      tipeBadge.style.display = "inline-flex";
+      tipeBadge.className = "tipe-badge uncond";
+      tipeBadge.textContent = "✅ Unconditional";
+    } else if (val === "noitem") {
+      tipeBadge.style.display = "inline-flex";
+      tipeBadge.className = "tipe-badge noitem";
+      tipeBadge.textContent = "⚠️ No Item";
+
+      // Pastikan ID sudah diisi dan sudah dicari
+      const sheet = monthSelect.value;
+      const id = inputId.value.trim();
+      if (!id || btnSave.disabled) {
+        showMessage(
+          "❌ Cari ID terlebih dahulu sebelum memilih No Item.",
+          false,
+          true,
+        );
+        menuType.value = "";
+        tipeBadge.style.display = "none";
+        return;
+      }
+
+      // Auto-save langsung
+      showLoader();
+      showMessage("", false);
+      try {
+        const payload = {
+          action: "save",
+          sheetName: sheet,
+          id: id,
+          tipe: "unconditional",
+          tanggal: "",
+          km: "",
+          harga: "",
+          keterangan: "",
+          status: "No Item",
+        };
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+
+        if (result.status === "success") {
+          showMessage("⚠️ No Item berhasil disimpan!", true);
+          resetForm();
+        } else {
+          showMessage(result.message, false, true);
+          menuType.value = "";
+          tipeBadge.style.display = "none";
+        }
+      } catch (error) {
+        console.error(error);
+        showMessage("Gagal menyimpan No Item.", false, true);
+        menuType.value = "";
+        tipeBadge.style.display = "none";
+      } finally {
+        hideLoader();
+      }
     }
   });
 
@@ -386,6 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     menuType.value = "";
     inputSection.style.display = "none";
     unconditionalSection.style.display = "none";
+    tipeBadge.style.display = "none"; // ← tambah ini
     resetFormFields();
     btnSave.disabled = true;
     setTimeout(() => {
