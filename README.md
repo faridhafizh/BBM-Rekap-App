@@ -3,7 +3,7 @@
 <div align="center">
 
 <!-- Logo placeholder — replace with logo.svg from this project -->
-<!-- <img src="assets/logo.svg" alt="Rekap BBM Connect Logo" width="160"/> -->
+<img src="Assets/logo.svg" alt="Rekap BBM Connect Logo" width="160"/>
 
 **Aplikasi rekap & laporan BBM Connect berbasis web — ringan, cepat, tanpa instalasi.**
 
