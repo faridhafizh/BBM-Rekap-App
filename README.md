@@ -1,62 +1,187 @@
 # Rekap BBM Connect
 
-Aplikasi sederhana untuk magang dalam melakukan rekapitulasi data BBM Connect secara manual dan men-generate laporan.
+<div align="center">
 
-## Penjelasan Aplikasi (Untuk Asisten AI Baru)
-Aplikasi ini dibangun untuk mengotomatisasi pembuatan laporan dari proses verifikasi manual data "BBM Connect". 
-Berikut adalah informasi teknis dan *business logic* dari aplikasi ini:
+<!-- Logo placeholder — replace with logo.svg from this project -->
+<!-- <img src="assets/logo.svg" alt="Rekap BBM Connect Logo" width="160"/> -->
 
-* **Arsitektur:**
-  * **Frontend:** Murni HTML, CSS (Vanilla), dan JavaScript. Dirancang ringan agar bisa di-*deploy* secara statis (misal via Vercel atau dijalankan lokal).
-  * **Backend:** Google Apps Script (GAS) yang di-*deploy* sebagai "Web App". Bertugas menerima *HTTP GET/POST requests* dari frontend dan melakukan operasi CRUD ke Google Spreadsheet.
-  * **Database:** Google Spreadsheet. Tiap *sheet* (lembar kerja) merepresentasikan bulan rekap data (contoh: "Maret 2026").
-* **Business Logic (Aturan Rekap):**
-  * Terdapat dua tipe pengecekan (*Menu Type*):
-    1. **Menu Input (Cek Struk):** Membandingkan data di aplikasi dengan foto struk. Jika ada perbedaan, *user* menginputkan nilai yang benar (Tanggal, KM, Harga). Jika data sudah benar semua (*Data OK*), *user* dapat men-skip atau mengosongkan nilai form input.
-    2. **Menu Unconditional (Cek Approval):** Mengecek status persetujuan (*approval*). Status yang umum: "Butuh approved 2", "Butuh approved 3", "Butuh di input", dan "unverified".
-  * **Pencarian Data (Search ID):** Mencegah duplikasi data. Sebelum menginput rekap baru, aplikasi memanggil data lama berdasarkan ID. Jika ditemukan, data diisikan ke form (edit mode).
-  * **Generate Laporan (Report Generation):** 
-    * Format pesan admin di-*generate* berdasarkan data di *sheet* bersangkutan.
-    * Aturan format "Menu Input": `ID >> [kolom yang diubah] menjadi [nilai]`. (Contoh: `id1 >> tanggal 10 maret 2026, KM menjadi 34550`). Data kosong/sesuai (*Data OK*) diabaikan.
-    * Aturan format "Menu Unconditional": `ID >> [Status Saat Ini]`. Data dengan status "unverified" direkam ke *sheet* untuk dokumentasi, namun sengaja **tidak** di-*generate* ke dalam pesan laporan (di-*skip*).
+**Aplikasi rekap & laporan BBM Connect berbasis web — ringan, cepat, tanpa instalasi.**
 
-## Cara Pemasangan (Setup)
+[![Made with HTML](https://img.shields.io/badge/Frontend-HTML%20%7C%20CSS%20%7C%20JS-orange?style=flat-square&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![Backend](https://img.shields.io/badge/Backend-Google%20Apps%20Script-4285F4?style=flat-square&logo=google&logoColor=white)](https://script.google.com/)
+[![Database](https://img.shields.io/badge/Database-Google%20Sheets-34A853?style=flat-square&logo=googlesheets&logoColor=white)](https://sheets.google.com/)
+[![Deploy](https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+## Tentang Proyek
+
+Rekap BBM Connect adalah aplikasi web yang dirancang untuk membantu proses verifikasi dan rekapitulasi data BBM Connect secara manual, sekaligus men-generate pesan laporan siap kirim ke admin — tanpa perlu mengisi ulang data dari nol.
+
+Dibangun dengan arsitektur ringan (zero-dependency frontend) sehingga dapat dijalankan secara lokal maupun di-deploy ke Vercel dalam hitungan menit.
+
+---
+
+## Arsitektur
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Frontend (Static)                 │
+│           index.html · style.css · script.js         │
+│         Vercel / Local · Zero dependencies           │
+└────────────────────┬────────────────────────────────┘
+                     │ HTTP GET / POST
+                     ▼
+┌─────────────────────────────────────────────────────┐
+│              Backend (Google Apps Script)            │
+│        Web App deployed as public endpoint           │
+│         Menangani CRUD ke Google Spreadsheet         │
+└────────────────────┬────────────────────────────────┘
+                     │ Read / Write
+                     ▼
+┌─────────────────────────────────────────────────────┐
+│               Database (Google Sheets)               │
+│    Setiap sheet = satu bulan rekap (mis. Maret 2026) │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## Fitur Utama
+
+- **Cek Struk (Menu Input)** — Bandingkan data aplikasi dengan foto struk. Input hanya kolom yang berbeda (Tanggal, KM, Harga); kolom yang sudah sesuai dikosongkan.
+- **Cek Approval (Menu Unconditional)** — Catat status persetujuan: *Butuh approved 2*, *Butuh approved 3*, *Butuh di input*, atau *unverified*.
+- **Pencegahan Duplikasi** — Cari ID sebelum input; jika ditemukan, data lama otomatis diisikan ke form (edit mode).
+- **Generate Laporan Otomatis** — Satu klik menghasilkan pesan rekap berformat rapi, siap dikirim ke admin.
+- **Multi-sheet / Multi-bulan** — Pilih sheet bulan yang aktif langsung dari aplikasi.
+
+---
+
+## Format Laporan
+
+| Tipe Menu | Format Output |
+|---|---|
+| **Menu Input** | `ID >> [kolom yang diubah] menjadi [nilai]` |
+| **Menu Unconditional** | `ID >> [Status Saat Ini]` |
+
+> **Catatan:** Data dengan status `unverified` tetap disimpan ke sheet untuk dokumentasi, namun **tidak** muncul dalam pesan laporan.
+
+**Contoh output:**
+```
+id1 >> tanggal 10 maret 2026, KM menjadi 34550
+id2 >> Butuh approved 2
+id3 >> harga menjadi 75000
+```
+
+---
+
+## Cara Pemasangan
+
+### Prasyarat
+
+- Akun Google
+- Akun GitHub (opsional, untuk deploy ke Vercel)
+- Akun Vercel (opsional)
+
+---
 
 ### 1. Persiapan Google Spreadsheet
+
 1. Buka [Google Sheets](https://sheets.google.com/) dan buat spreadsheet baru.
-2. Anda bisa menamai spreadsheet ini (contoh: "Rekap BBM Connect").
-3. Ganti nama Sheet1 menjadi nama bulan yang Anda inginkan (misalnya: `Januari 2024`). Anda dapat membuat sheet baru untuk bulan-bulan berikutnya.
+2. Namai spreadsheet sesuai kebutuhan, misalnya **"Rekap BBM Connect"**.
+3. Ubah nama **Sheet1** menjadi nama bulan, contoh: `Maret 2026`. Tambahkan sheet baru untuk bulan-bulan berikutnya sesuai kebutuhan.
 
-### 2. Pemasangan Backend (Google Apps Script)
-1. Di dalam Google Spreadsheet yang baru dibuat, klik menu **Extensions > Apps Script** (Ekstensi > Apps Script).
-2. Hapus semua kode default yang ada di dalam editor.
-3. Buka file `backend/Code.gs` dari repository ini, salin seluruh isinya, dan tempel (paste) ke dalam editor Apps Script.
-4. Simpan proyek (tekan ikon disket / `Ctrl+S`).
-5. Klik tombol **Deploy > New deployment** di pojok kanan atas.
-6. Pilih **Select type** lalu klik ikon gerigi dan pilih **Web app**.
-7. Konfigurasi:
-   - **Description**: (Bebas, misalnya "Versi 1")
-   - **Execute as**: `Me` (Penting agar script memiliki akses untuk menulis di sheet Anda)
-   - **Who has access**: `Anyone` (Penting agar web frontend dapat berkomunikasi dengan API ini tanpa login).
-8. Klik **Deploy**.
-9. Akan muncul jendela peringatan *Authorization required*. Klik **Authorize access**.
-10. Pilih akun Google Anda. Jika muncul peringatan *Google hasn’t verified this app*, klik **Advanced** lalu klik **Go to ... (unsafe)**. Allow semua permission.
-11. Salin URL **Web app URL** yang diberikan (berakhiran dengan `/exec`). Simpan URL ini, Anda akan memasukkannya ke dalam aplikasi web.
+---
 
-### 3. Frontend & Deployment (Vercel)
-Aplikasi frontend terdiri dari file `index.html`, `style.css`, dan `script.js` yang berada di dalam folder `frontend`.
-1. Upload folder `frontend` ini ke akun GitHub Anda.
-2. Login ke [Vercel](https://vercel.com/) dan buat proyek baru.
-3. Import repository GitHub Anda, atur root directory ke `frontend` jika perlu, dan klik Deploy.
-4. Setelah deploy selesai, buka URL Vercel Anda.
-5. Masukkan **Web app URL** dari Apps Script yang disalin sebelumnya ke dalam kolom "API URL" di dalam aplikasi untuk menghubungkan frontend dengan database Google Sheet Anda.
+### 2. Pasang Backend (Google Apps Script)
+
+1. Di dalam spreadsheet, klik **Extensions → Apps Script**.
+2. Hapus seluruh kode default di editor.
+3. Salin isi file `backend/Code.gs` dari repositori ini, lalu tempel ke editor.
+4. Simpan proyek (`Ctrl+S`).
+5. Klik **Deploy → New deployment**.
+6. Pilih ikon gerigi → **Web app**, lalu atur:
+
+   | Pengaturan | Nilai |
+   |---|---|
+   | Execute as | `Me` |
+   | Who has access | `Anyone` |
+
+7. Klik **Deploy** → **Authorize access**.
+8. Pilih akun Google Anda. Jika muncul peringatan *Google hasn't verified this app*, klik **Advanced → Go to ... (unsafe)** dan izinkan semua permission.
+9. **Salin Web App URL** yang muncul (berakhiran `/exec`). URL ini dibutuhkan di langkah berikutnya.
+
+---
+
+### 3. Deploy Frontend ke Vercel
+
+1. Upload folder `frontend/` ke repositori GitHub Anda.
+2. Login ke [Vercel](https://vercel.com/) → **New Project** → Import repositori.
+3. Atur **Root Directory** ke `frontend` jika diperlukan, lalu klik **Deploy**.
+4. Setelah selesai, buka URL Vercel Anda.
+5. Masukkan **Web App URL** dari Apps Script ke kolom *API URL* di aplikasi, lalu klik **Muat Bulan**.
+
+> **Alternatif lokal:** Cukup buka `frontend/index.html` langsung di browser — tidak perlu server.
+
+---
 
 ## Cara Penggunaan
-1. Masukkan API URL dari Apps Script, lalu klik **Muat Bulan (Sheet)**.
-2. Pilih sheet bulan yang sedang Anda rekap.
-3. Masukkan `ID` data dan tekan **Cari ID**. (Bisa untuk membuat entri baru atau mengedit entri lama).
-4. Pilih **Tipe Pengecekan**:
-   - Jika *Menu Input*: Isi kolom yang salah (Tanggal, KM, Harga). Kosongkan jika sudah benar (data OK).
-   - Jika *Menu Unconditional*: Pilih status yang sesuai.
-5. Klik **Simpan Rekap**.
-6. Pada akhir rekapitulasi, klik **Generate Pesan Rekap Bulan Ini** untuk membuat pesan laporan yang siap dikirimkan ke Admin.
+
+```
+1. Masukkan API URL → klik Muat Bulan
+         ↓
+2. Pilih sheet bulan yang sedang direkap
+         ↓
+3. Masukkan ID → klik Cari ID
+         ↓
+4. Pilih Tipe Pengecekan:
+   • Menu Input       → isi kolom yang salah saja
+   • Menu Unconditional → pilih status yang sesuai
+         ↓
+5. Klik Simpan Rekap
+         ↓
+6. Selesai rekap → klik Generate Pesan Rekap Bulan Ini
+```
+
+---
+
+## Struktur Repositori
+
+```
+rekap-bbm-connect/
+├── frontend/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+├── backend/
+│   └── Code.gs
+├── assets/
+│   └── logo.svg
+└── README.md
+```
+
+---
+
+## Tech Stack
+
+| Layer | Teknologi |
+|---|---|
+| Frontend | HTML5, CSS3 (Vanilla), JavaScript (ES6+) |
+| Backend | Google Apps Script |
+| Database | Google Sheets |
+| Hosting | Vercel (atau lokal) |
+
+---
+
+## Kontribusi
+
+Pull request dan issue sangat disambut. Untuk perubahan besar, buka issue terlebih dahulu untuk mendiskusikan apa yang ingin diubah.
+
+---
+
+## Lisensi
+
+[MIT](LICENSE) © 2026 Rekap BBM Connect
